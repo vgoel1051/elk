@@ -3,36 +3,45 @@
 # Installing Kibana
 #
 
-# Install Kibana 
+# Install Kibana
 
 - name: Install Kibana with apt
   apt:
    name: kibana
    update_cache: yes
- 
+  tags: apt_kibana
+
+- name: Check that HTTPS transport is available to APT
+  apt: name="apt-transport-https" state=present
+
 # Configurations
 
 - name: Updating the config file to allow outside access
   lineinfile:
    destfile: /etc/kibana/kibana.yml
    regexp: 'server.host:'
-   line: 'server.host: 0.0.0.0'
+   line: 'server.host: 127.0.0.1'
+  tags: apt_kibana
 
 - name: Defining server port
   lineinfile:
    destfile: /etc/kibana/kibana.yml
    regexp: 'server.port:'
    line: 'server.port: 5601'
-    
+  tags: apt_kibana
+
+
 - name: Defining Elasticsearch URL
   lineinfile:
    destfile: /etc/kibana/kibana.yml
    regexp: 'elasticsearch.url:'
-   line: 'elasticsearch.url: "http://localhost:9200"'
-   
+   line: 'elasticsearch.url: "http://127.0.0.1:9200"'
+  tags: apt_kibana
+
 # Starting Kibana
 
 - name: Starting Kibana
   service:
    name: kibana
    state: started
+  tags: apt_kibana

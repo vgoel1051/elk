@@ -2,47 +2,55 @@
 #
 # Installing Elasticsearch
 #
-
-# Add Elasticsearch apt key
-
-- name: Add Elasticsearch apt key
+# Adds the apt-key for Elasticsearch
+- name: Add Elasticsearch apt-key
   apt_key:
    url: "https://packages.elastic.co/GPG-KEY-elasticsearch"
    state: present
 
-# Add the Elasticsearch apt repo. For versions 6 of the stack - use '6.x-prerelease':
+- name: Check that HTTPS transport is available to APT
+  apt: name="apt-transport-https" state=present
 
-- name: Adding Elasticsearch repo
+# Add the Elasticsearch APT-repository
+- name: Adding Elasticsearch APT repository
   apt_repository:
-   repo: deb https://artifacts.elastic.co/packages/5.x/apt stable main
+   repo: "deb https://artifacts.elastic.co/packages/6.x/apt  stable main"
    state: present
 
-# Installing Elasticsearch
-
-- name: Install Elasticsearch
+# Install Elasticsearch
+- name: Update repositories cache and install Elasticsearch
   apt:
    name: elasticsearch
    update_cache: yes
-   
-# Update Elasticsearch config file to allow access (to secure Elasticsearch, bind to 'localhost'). 
 
-- name: Updating the config file to allow outside access
+- name: Update and upgrade apt packages
+  become: true
+  apt:
+    upgrade: yes
+    update_cache: yes
+    state: present
+
+# Update Elasticsearch config file to only allow localhost connections
+- name: Updating the config file to restrict outside access
   lineinfile:
    destfile: /etc/elasticsearch/elasticsearch.yml
    regexp: 'network.host:'
-   line: 'network.host: 0.0.0.0'
- 
-# Update Elasticsearch port in config file 
+   line: 'network.host: 127.0.0.1'
 
-- name: Updating the port in config file 
+- name: open port
   lineinfile:
-   destfile: /etc/elasticsearch/elasticsearch.yml
-   regexp: 'http.port:'
-   line: 'http.port: 9200'
- 
-# Start Elasticsearch
-- name: Starting Elasticsearch
+    path: /etc//elasticsearch/elasticsearch.yml
+    regexp: '^http.port: 9200'
+
+    line: 'http.port: 9200'
+# Restart Elasticsearch
+- name: stoping Elasticsearch
+  service:
+   name: elasticsearch
+   state: stopped
+
+# Restart Elasticsearch
+- name: starting Elasticsearch
   service:
    name: elasticsearch
    state: started
-    
